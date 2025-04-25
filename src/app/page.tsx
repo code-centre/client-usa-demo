@@ -1,6 +1,7 @@
 // pages/index.tsx
 'use client'
 import { useEffect, useRef, useState } from 'react';
+import { Chat } from './components/chat';
 
 
 const DOC_ID = '1YaA-1O9oRPPZJUbSEdsduQYsnw7e0wbpQoWESp_62IY';
@@ -72,8 +73,6 @@ export default function Home() {
     handleGetDoc();
   };
 
-  console.log(doc?.body?.content[doc?.body?.content?.length - 1]?.endIndex);
-
   return (
     <>
       <nav className='flex justify-evenly items-center border-b py-4'>
@@ -100,17 +99,7 @@ export default function Home() {
         <div className='h-full flex justify-center items-center w-full'>
           {
             selected === 'docs' && (
-              <div className='flex flex-col gap-4 w-full max-w-md'>
-                <h1>Actualizar Google Doc</h1>
-                <input
-                  type="text"
-                  value={input}
-                  className='border rounded-md p-2'
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Escribe algo..."
-                />
-                <button className='bg-blue-500 text-white p-2 rounded-md cursor-pointer' onClick={handleSubmit}>Actualizar</button>
-              </div>
+             <Chat docId={DOC_ID} />
             )}
         </div>
       </main>
