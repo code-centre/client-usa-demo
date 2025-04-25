@@ -13,6 +13,7 @@ export default function Home() {
   const [changed, setChanged] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState('docs');
 
 
   const handleGetDoc = async () => {
@@ -74,33 +75,46 @@ export default function Home() {
   console.log(doc?.body?.content[doc?.body?.content?.length - 1]?.endIndex);
 
   return (
-    <main className='grid grid-cols-[4fr_1.5fr] h-screen mx-36 gap-10 py-10'>
+    <>
+      <nav className='flex justify-evenly items-center border-b py-4'>
+        <ul className='flex justify-evenly gap-10'>
+          <li className={`cursor-pointer hover:text-blue-500 ${selected === 'docs' ? 'text-blue-500' : ''}`} onClick={() => setSelected('docs')}>DOCS</li>
+          <li className={`cursor-pointer hover:text-blue-500 ${selected === 'sheets' ? 'text-blue-500' : ''}`} onClick={() => setSelected('sheets')}>Sheets</li>
+        </ul>
+      </nav>
+      <main className='grid grid-cols-[4fr_1.5fr] h-screen mx-36 gap-10 py-10'>
 
-      <div className='h-full rounded-md overflow-hidden'>
-        {
-          loading ? (
-            <div className="flex justify-center items-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-500"></div>
-            </div>
-          ) : (
-            <iframe onChange={() => console.log('Hola?')} className='h-full w-full ' src="https://docs.google.com/document/d/1YaA-1O9oRPPZJUbSEdsduQYsnw7e0wbpQoWESp_62IY/edit?embedded=true"></iframe>
-          )
-        }
-      </div>
-      <div className='h-full flex justify-center items-center w-full'>
-        <div className='flex flex-col gap-4 w-full max-w-md'>
-          <h1>Actualizar Google Doc</h1>
-          <input
-            type="text"
-            value={input}
-            className='border rounded-md p-2'
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Escribe algo..."
-          />
-          <button className='bg-blue-500 text-white p-2 rounded-md cursor-pointer' onClick={handleSubmit}>Actualizar</button>
+        <div className='h-full rounded-md overflow-hidden'>
+          {
+            loading ? (
+              <div className="flex justify-center items-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-500"></div>
+              </div>
+            ) : (
+              selected === 'docs' && (
+                <iframe className='h-full w-full ' src="https://docs.google.com/document/d/1YaA-1O9oRPPZJUbSEdsduQYsnw7e0wbpQoWESp_62IY/edit?embedded=true"></iframe>
+              )
+            )
+          }
         </div>
-      </div>
-    </main>
+        <div className='h-full flex justify-center items-center w-full'>
+          {
+            selected === 'docs' && (
+              <div className='flex flex-col gap-4 w-full max-w-md'>
+                <h1>Actualizar Google Doc</h1>
+                <input
+                  type="text"
+                  value={input}
+                  className='border rounded-md p-2'
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Escribe algo..."
+                />
+                <button className='bg-blue-500 text-white p-2 rounded-md cursor-pointer' onClick={handleSubmit}>Actualizar</button>
+              </div>
+            )}
+        </div>
+      </main>
+    </>
   );
 }
 
