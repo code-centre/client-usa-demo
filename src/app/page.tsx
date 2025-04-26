@@ -99,7 +99,7 @@ export default function Home() {
         <div className='h-full flex justify-center items-center w-full'>
           {
             selected === 'docs' && (
-             <Chat docId={DOC_ID} />
+             <Chat docId={DOC_ID} doc={doc}/>
             )}
         </div>
       </main>
