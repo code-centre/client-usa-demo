@@ -14,6 +14,7 @@ interface ChatProps {
 }
 
 export const Chat = ({docId, doc, fetchSheetData, isSheets}: ChatProps) => {
+  console.log('doc', doc.body);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'user', content: 'Be my assistant to manage and update this document: ' + docId },
   ]);
@@ -23,6 +24,7 @@ export const Chat = ({docId, doc, fetchSheetData, isSheets}: ChatProps) => {
   const [updateText, setUpdateText] = useState('');
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [indexToInsertText, setIndexToInsertText] = useState(null);
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -61,6 +63,7 @@ export const Chat = ({docId, doc, fetchSheetData, isSheets}: ChatProps) => {
       // Check if the response contains text that looks like it's suggesting an update
       if (data.wantEdit) {
         setShowUpdateForm(true);
+        setIndexToInsertText(data.index);
         
         // Try to extract potential text to update
         const potentialText = extractUpdateText(data.result);
@@ -93,14 +96,13 @@ export const Chat = ({docId, doc, fetchSheetData, isSheets}: ChatProps) => {
     
     setIsUpdating(true);
     try {
-      const index = doc?.body?.content[doc?.body?.content?.length - 1]?.endIndex - 1 || 1;
-      
+      const index = indexToInsertText ? indexToInsertText - 1 : 1;
       const res = await fetch(`/api/docs/${docId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: updateText,
-          index: index
+          index: index 
         }),
       });
 
@@ -253,8 +255,7 @@ export const Chat = ({docId, doc, fetchSheetData, isSheets}: ChatProps) => {
         )}
       </div>
       <div className="border-t p-3 flex">
-        <input
-          type="text"
+        <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}

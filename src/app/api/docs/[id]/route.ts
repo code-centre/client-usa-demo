@@ -40,7 +40,7 @@ export async function POST(request: Request, { params }: Params) {
                           location: {
                               index: index, // Insertar después del inicio
                           },
-                          text: ` ${text}`,
+                          text: `${text}`,
                       },
                   },
               ],

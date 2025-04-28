@@ -41,9 +41,12 @@ Response: Of course! The document is about...`
             },
             wantEdit: {
               type: Type.BOOLEAN
+            },
+            index: {
+              type: Type.INTEGER
             }
           },
-          required: ["response", "wantEdit"]
+          required: ["response", "wantEdit", "index"]
         }
       }
     });
@@ -58,10 +61,8 @@ Response: Of course! The document is about...`
     // const result = await chat.sendMessage({message: messages[1].content});
     // const responseText = responseWantToEdit|| "I couldn't generate a response. Please try again.";
 
-    // Log the response for debugging
-    // console.log('Gemini response:', responseText.substring(0, 100) + '...');
 
-    return NextResponse.json({ result: responseWantToEdit.response, wantEdit: responseWantToEdit.wantEdit });
+    return NextResponse.json({ result: responseWantToEdit.response, wantEdit: responseWantToEdit.wantEdit, index: responseWantToEdit.index });
   } catch (error: any) {
     console.error('Error in Gemini API:', error);
 
@@ -87,10 +88,13 @@ function handleUserPrompt(input: string, doc: any) {
 
 async function handleKnowWantEdit(chat: any, input: string, doc: any) {
   const result = await chat.sendMessage({
-    message: `Based on the following message: "${input}", determine if the user wants to edit a document or receive a response regarding their document.
-    If your answer is "Yes", use the following document content: ${JSON.stringify(doc.body.content)} — this is a response from the Google Docs API.
-    Analyze the document's content carefully and provide an appropriate answer to the user's question.`});
-  console.log(JSON.parse(result.text).wantEdit, 'result!!!!');
+    message: `Basándote en el siguiente mensaje: "${input}", determina si el usuario quiere editar el documento o simplemente recibir una respuesta sobre su documento.
+
+      Si tu respuesta es "Sí" (es decir, el usuario quiere editar el documento), utiliza el siguiente contenido del documento: ${JSON.stringify(doc.body.content)} — esta es una respuesta de la API de Google Docs — y proporciona un índice adecuado donde se debería insertar el nuevo texto del usuario quiero siempre le agregues un espacio al incio por ejemplo: " palabra".
+
+  Si tu respuesta es "No" (es decir, el usuario está haciendo una pregunta sobre el documento), analiza cuidadosamente el contenido del documento y proporciona una respuesta clara y precisa a la pregunta del usuario.
+    `});
+  console.log(JSON.parse(result.text), 'result!!!!');
 
   return JSON.parse(result.text) || "I couldn't generate a response. Please try again.";
 }
