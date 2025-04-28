@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Chat } from './components/chat';
 
 
-const DOC_ID = '1YaA-1O9oRPPZJUbSEdsduQYsnw7e0wbpQoWESp_62IY';
+const DOC_ID = '1Xne_i_vWi2ecL6ZwvBmI0Xl-tNYrIoLC_szVErbM9Pk';
 const SHEET_ID = '1sC6mMTE83EtifBARKHWe-lZdQsLPcrFzhYHfJRoHCDY';
 
 
@@ -146,9 +146,9 @@ export default function Home() {
           <li className={`cursor-pointer hover:text-blue-500 ${selected === 'sheets' ? 'text-blue-500' : ''}`} onClick={() => setSelected('sheets')}>Sheets</li>
         </ul>
       </nav>
-      <main className={`grid ${selected === 'sheets' ? 'grid-cols-[4fr]' : 'grid-cols-[4fr_1.5fr]'} h-screen mx-36 gap-10 py-10`}>
+      <main className={`grid ${selected === 'sheets' ? 'grid-cols-[3.2fr_1.5fr]' : 'grid-cols-[3.2fr_1.5fr]'} h-screen mx-36 gap-10 py-10`}>
 
-        <div className='h-full rounded-md overflow-hidden'>
+        <div className='h-full rounded-md overflow-hidden w-full'>
           {
             loading ? (
               <div className="flex justify-center items-center h-full">
@@ -157,7 +157,7 @@ export default function Home() {
             ) : (
               <>
                 {selected === 'docs' && (
-                  <iframe className='h-full w-full ' src="https://docs.google.com/document/d/1YaA-1O9oRPPZJUbSEdsduQYsnw7e0wbpQoWESp_62IY/edit?embedded=true"></iframe>
+                  <iframe className='h-full w-full ' src="https://docs.google.com/document/d/1Xne_i_vWi2ecL6ZwvBmI0Xl-tNYrIoLC_szVErbM9Pk/edit?embedded=true"></iframe>
                 )}
                 {
                   selected === 'sheets' && (
@@ -168,29 +168,16 @@ export default function Home() {
             )
           }
         </div>
-        <div className='h-full flex justify-center items-center w-full'>
+        <div className='h-full  w-full'>
           {
-            selected === 'docs' && (
-             <Chat docId={DOC_ID} doc={doc}/>
+            selected === 'docs' && doc && (
+              <Chat docId={DOC_ID} doc={doc} isSheets={false} />
             )}
-          {/* {
+          {
             selected === 'sheets' && (
-              <div className='flex flex-col gap-4 w-full max-w-md'>
-                <h1>Actualizar Google Sheet</h1>
-                <input value={cell} onChange={(e) => setCell(e.target.value)} placeholder="Ej: A2" />
-                <button onClick={getCellValue}>Leer celda</button>
-                <p>Valor: {value}</p>
-                <input
-                  type="text"
-                  value={inputValue}
-                  className='border rounded-md p-2'
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Escribe algo..."
-                />
-                <button className='bg-blue-500 text-white p-2 rounded-md cursor-pointer' onClick={writeToSheet}>Actualizar</button>
-              </div>
+              <Chat docId={SHEET_ID} doc={data} fetchSheetData={fetchSheetData} isSheets={true} />
             )
-          } */}
+          }
         </div>
       </main>
     </>

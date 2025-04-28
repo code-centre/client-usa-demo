@@ -9,12 +9,15 @@ interface Message {
 interface ChatProps {
   docId: string;
   doc: any;
+  fetchSheetData?: () => Promise<void>;
+  isSheets: boolean;
 }
 
-export const Chat = ({docId, doc}: ChatProps) => {
+export const Chat = ({docId, doc, fetchSheetData, isSheets}: ChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'user', content: 'Be my assistant to manage and update this document: ' + JSON.stringify(doc?.body) },
+    { role: 'user', content: 'Be my assistant to manage and update this document: ' + docId },
   ]);
+  const [cell, setCell] = useState('');
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [updateText, setUpdateText] = useState('');
@@ -27,6 +30,9 @@ export const Chat = ({docId, doc}: ChatProps) => {
     // Add user message to chat
     const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
+    const cellRegex = /\b[A-Z]+[0-9]+\b(?::\b[A-Z]+[0-9]+\b)?/;
+    console.log(cellRegex.exec(input));
+    setCell(cellRegex.exec(input)?.[0] || '');
     setInput('');
     setIsLoading(true);
     
@@ -39,6 +45,7 @@ export const Chat = ({docId, doc}: ChatProps) => {
         },
         body: JSON.stringify({
           messages: [messages, userMessage],
+          doc: doc
         }),
       });
       
@@ -52,7 +59,7 @@ export const Chat = ({docId, doc}: ChatProps) => {
       setMessages(prev => [...prev, modelResponse]);
       
       // Check if the response contains text that looks like it's suggesting an update
-      if (data.result.includes("update") || data.result.includes("change") || data.result.includes("add") || data.result.includes("modify")) {
+      if (data.wantEdit) {
         setShowUpdateForm(true);
         
         // Try to extract potential text to update
@@ -77,7 +84,6 @@ export const Chat = ({docId, doc}: ChatProps) => {
     // Look for text after phrases like "add the following:"
     const followingMatch = text.match(/(?:add|update|insert|change to|with)(?:\s+the)?(?:\s+following)?(?:\s+text)?(?:\s*:+\s*)([^.!?]+)/i);
     if (followingMatch && followingMatch[1]) return followingMatch[1].trim();
-    
     return '';
   };
 
@@ -129,16 +135,79 @@ export const Chat = ({docId, doc}: ChatProps) => {
     }
   };
 
+  const handleUpdateSheets = async () => {
+    let values: string[][] = [];
+
+    setIsUpdating(true);
+
+    try {
+
+      let values = [];
+
+    if (cell.includes(':')) {
+      const [start, end] = cell.split(':');
+      const startRow = parseInt(start.match(/\d+/)?.[0] || '0');
+      const endRow = parseInt(end.match(/\d+/)?.[0] || '0');
+      const numRows = endRow - startRow + 1;
+
+      values = Array.from({ length: numRows }, () => [updateText]);
+    } else {
+      values = [[updateText]];
+    }
+
+      const res = await fetch(`/api/sheets/${docId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sheetId: docId,
+          range: `'Hoja 1'!${cell}`,
+          values: values,
+        }),
+      });
+  
+      const json = await res.json();
+      console.log('Respuesta write:', json);
+      // setInputValue('');
+      fetchSheetData?.();
+      
+      // Add a message to indicate the update was successful
+      setMessages(prev => [...prev, { 
+        role: 'model' as const, 
+        content: `✅ Sheet updated successfully with: "${updateText}"` 
+      }]);
+      
+      // Reset the update form
+      setUpdateText('');
+      setShowUpdateForm(false);
+      
+      // Inform the user that they might need to refresh to see changes
+      setTimeout(() => {
+        setMessages(prev => [...prev, { 
+          role: 'model' as const, 
+          content: 'Note: You may need to refresh the sheet view to see the changes.' 
+        }]);
+      }, 1000);
+    } catch (error) {
+      console.error('Error updating sheet:', error);
+      setMessages(prev => [...prev, { 
+        role: 'model' as const, 
+        content: '❌ Failed to update the sheet. Please try again.' 
+      }]);
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col h-full border rounded-md overflow-hidden">
-      <div className="flex-1 p-4 overflow-y-auto">
+    <div className="flex flex-col max-h-screen overflow-y-auto overflow-x-hidden border rounded-md">
+      <div className=" p-4 overflow-y-auto">
         {messages.map((message, index) => (
           <div 
             key={index} 
-            className={`mb-4 p-3 rounded-lg ${
+            className={`mb-4 p-3 rounded-lg text-black ${
               message.role === 'user' 
-                ? 'bg-blue-100 ml-auto max-w-[80%]' 
-                : 'bg-gray-100 mr-auto max-w-[80%]'
+                ? 'bg-blue-100 w-[80%] ml-auto' 
+                : 'bg-gray-100 w-[80%] mr-auto'
             }`}
           >
             {message.content}
@@ -151,7 +220,7 @@ export const Chat = ({docId, doc}: ChatProps) => {
         )}
         
         {showUpdateForm && (
-          <div className="mb-4 p-4 border border-blue-300 rounded-lg bg-blue-50">
+          <div className="mb-4 p-4 border border-blue-300 rounded-lg text-black bg-blue-50">
             <h3 className="font-medium mb-2">Update Document</h3>
             <textarea
               value={updateText}
@@ -168,9 +237,9 @@ export const Chat = ({docId, doc}: ChatProps) => {
                 Cancel
               </button>
               <button 
-                onClick={handleUpdateDocument}
+                onClick={isSheets ? handleUpdateSheets : handleUpdateDocument}
                 disabled={isUpdating || !updateText.trim()}
-                className="bg-blue-500 text-white px-3 py-1 rounded-md disabled:bg-blue-300 flex items-center"
+                className="bg-blue-500 text-black px-3 py-1 rounded-md disabled:bg-blue-300 flex items-center"
               >
                 {isUpdating ? (
                   <>
