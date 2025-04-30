@@ -14,9 +14,9 @@ interface ChatProps {
 }
 
 export const Chat = ({docId, doc, fetchSheetData, isSheets}: ChatProps) => {
-  console.log('doc', doc.body);
+  console.log('doc', doc);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'user', content: 'Be my assistant to manage and update this document: ' + docId },
+    { role: 'user', content: 'Be my assistant to manage and update this document: ' + doc.title },
   ]);
   const [cell, setCell] = useState('');
   const [input, setInput] = useState('');
@@ -25,6 +25,7 @@ export const Chat = ({docId, doc, fetchSheetData, isSheets}: ChatProps) => {
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [indexToInsertText, setIndexToInsertText] = useState(null);
+  const [dataToSendToDocs, setDataToSendToDocs] = useState({});
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -33,7 +34,6 @@ export const Chat = ({docId, doc, fetchSheetData, isSheets}: ChatProps) => {
     const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
     const cellRegex = /\b[A-Z]+[0-9]+\b(?::\b[A-Z]+[0-9]+\b)?/;
-    console.log(cellRegex.exec(input));
     setCell(cellRegex.exec(input)?.[0] || '');
     setInput('');
     setIsLoading(true);
@@ -63,7 +63,7 @@ export const Chat = ({docId, doc, fetchSheetData, isSheets}: ChatProps) => {
       // Check if the response contains text that looks like it's suggesting an update
       if (data.wantEdit) {
         setShowUpdateForm(true);
-        setIndexToInsertText(data.index);
+        setDataToSendToDocs(data);
         
         // Try to extract potential text to update
         const potentialText = extractUpdateText(data.result);
@@ -102,7 +102,7 @@ export const Chat = ({docId, doc, fetchSheetData, isSheets}: ChatProps) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: updateText,
-          index: index 
+          data: dataToSendToDocs 
         }),
       });
 
